@@ -69,3 +69,5 @@ logs/
 
 ### Docker ###
 docker-compose.override.yml
+
+zipsa_google_key.json
