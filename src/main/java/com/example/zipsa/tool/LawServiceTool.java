@@ -32,6 +32,27 @@ public class LawServiceTool {
         this.restClient = RestClient.create();
     }
 
+    private String callApi(String toolName, URI uri) {
+        try {
+            log.debug("[{}] 요청 URL: {}", toolName, uri);
+            String response = restClient.get()
+                    .uri(uri)
+                    .retrieve()
+                    .body(String.class);
+            log.info("[{}] 응답: {}", toolName, response);
+            return response;
+        } catch (Exception e) {
+            log.error("[{}] API 호출 실패: {}", toolName, e.getMessage(), e);
+            return "[Error] " + toolName + " 호출 중 오류가 발생했습니다: " + e.getMessage();
+        }
+    }
+
+    private void addParam(UriComponentsBuilder builder, String key, String value) {
+        if (value != null && !value.isBlank()) {
+            builder.queryParam(key, value);
+        }
+    }
+
     @Tool(description = "현행법령(시행일) 목록을 조회합니다. 법령명으로 검색하여 법령 목록을 가져옵니다. " +
             "응답의 각 법령에는 '법령ID', '법령일련번호', '시행일자' 등이 포함됩니다. " +
             "법령 본문을 조회하려면 이 결과에서 '법령ID'를 searchLawContent의 id로, " +
@@ -49,30 +70,12 @@ public class LawServiceTool {
                 .queryParam("target", "eflaw")
                 .queryParam("type", "JSON");
 
-        if (query != null && !query.isBlank()) {
-            uriBuilder.queryParam("query", query);
-        }
-        if (display != null && !display.isBlank()) {
-            uriBuilder.queryParam("display", display);
-        }
-        if (page != null && !page.isBlank()) {
-            uriBuilder.queryParam("page", page);
-        }
-        if (sort != null && !sort.isBlank()) {
-            uriBuilder.queryParam("sort", sort);
-        }
+        addParam(uriBuilder, "query", query);
+        addParam(uriBuilder, "display", display);
+        addParam(uriBuilder, "page", page);
+        addParam(uriBuilder, "sort", sort);
 
-        URI uri = uriBuilder.build().encode().toUri();
-        log.debug("[searchLawList] 요청 파라미터 - query: {}, display: {}, page: {}, sort: {}", query, display, page, sort);
-        log.debug("[searchLawList] 요청 URL: {}", uri);
-
-        String response = restClient.get()
-                .uri(uri)
-                .retrieve()
-                .body(String.class);
-
-        log.info("[searchLawList] 응답: {}", response);
-        return response;
+        return callApi("searchLawList", uriBuilder.build().encode().toUri());
     }
 
     @Tool(description = "법령 본문을 조회합니다. searchLawList 결과와 연관하여 사용합니다. " +
@@ -91,30 +94,12 @@ public class LawServiceTool {
                 .queryParam("target", "eflaw")
                 .queryParam("type", "JSON");
 
-        if (id != null && !id.isBlank()) {
-            uriBuilder.queryParam("ID", id);
-        }
-        if (mst != null && !mst.isBlank()) {
-            uriBuilder.queryParam("MST", mst);
-        }
-        if (efYd != null && !efYd.isBlank()) {
-            uriBuilder.queryParam("efYd", efYd);
-        }
-        if (jo != null && !jo.isBlank()) {
-            uriBuilder.queryParam("JO", jo);
-        }
+        addParam(uriBuilder, "ID", id);
+        addParam(uriBuilder, "MST", mst);
+        addParam(uriBuilder, "efYd", efYd);
+        addParam(uriBuilder, "JO", jo);
 
-        URI uri = uriBuilder.build().encode().toUri();
-        log.info("[searchLawContent] 요청 파라미터 - id: {}, mst: {}, efYd: {}, jo: {}", id, mst, efYd, jo);
-        log.info("[searchLawContent] 요청 URL: {}", uri);
-
-        String response = restClient.get()
-                .uri(uri)
-                .retrieve()
-                .body(String.class);
-
-        log.info("[searchLawContent] 응답: {}", response);
-        return response;
+        return callApi("searchLawContent", uriBuilder.build().encode().toUri());
     }
 
     @Tool(description = "법령 본문의 특정 조항호목을 상세 조회합니다. searchLawList 결과와 연관하여 사용합니다. " +
@@ -137,36 +122,14 @@ public class LawServiceTool {
                 .queryParam("type", "JSON")
                 .queryParam("JO", jo);
 
-        if (id != null && !id.isBlank()) {
-            uriBuilder.queryParam("ID", id);
-        }
-        if (mst != null && !mst.isBlank()) {
-            uriBuilder.queryParam("MST", mst);
-        }
-        if (efYd != null && !efYd.isBlank()) {
-            uriBuilder.queryParam("efYd", efYd);
-        }
-        if (hang != null && !hang.isBlank()) {
-            uriBuilder.queryParam("HANG", hang);
-        }
-        if (ho != null && !ho.isBlank()) {
-            uriBuilder.queryParam("HO", ho);
-        }
-        if (mok != null && !mok.isBlank()) {
-            uriBuilder.queryParam("MOK", mok);
-        }
+        addParam(uriBuilder, "ID", id);
+        addParam(uriBuilder, "MST", mst);
+        addParam(uriBuilder, "efYd", efYd);
+        addParam(uriBuilder, "HANG", hang);
+        addParam(uriBuilder, "HO", ho);
+        addParam(uriBuilder, "MOK", mok);
 
-        URI uri = uriBuilder.build().encode().toUri();
-        log.info("[searchLawContentDetail] 요청 파라미터 - id: {}, mst: {}, efYd: {}, jo: {}, hang: {}, ho: {}, mok: {}", id, mst, efYd, jo, hang, ho, mok);
-        log.info("[searchLawContentDetail] 요청 URL: {}", uri);
-
-        String response = restClient.get()
-                .uri(uri)
-                .retrieve()
-                .body(String.class);
-
-        log.info("[searchLawContentDetail] 응답: {}", response);
-        return response;
+        return callApi("searchLawContentDetail", uriBuilder.build().encode().toUri());
     }
 
     @Tool(description = "현행법령(공포일 기준) 본문의 특정 조항호목을 상세 조회합니다. " +
@@ -189,33 +152,13 @@ public class LawServiceTool {
                 .queryParam("type", "JSON")
                 .queryParam("JO", jo);
 
-        if (id != null && !id.isBlank()) {
-            uriBuilder.queryParam("ID", id);
-        }
-        if (mst != null && !mst.isBlank()) {
-            uriBuilder.queryParam("MST", mst);
-        }
-        if (hang != null && !hang.isBlank()) {
-            uriBuilder.queryParam("HANG", hang);
-        }
-        if (ho != null && !ho.isBlank()) {
-            uriBuilder.queryParam("HO", ho);
-        }
-        if (mok != null && !mok.isBlank()) {
-            uriBuilder.queryParam("MOK", mok);
-        }
+        addParam(uriBuilder, "ID", id);
+        addParam(uriBuilder, "MST", mst);
+        addParam(uriBuilder, "HANG", hang);
+        addParam(uriBuilder, "HO", ho);
+        addParam(uriBuilder, "MOK", mok);
 
-        URI uri = uriBuilder.build().encode().toUri();
-        log.info("[searchLawContentDetailByDate] 요청 파라미터 - id: {}, mst: {}, jo: {}, hang: {}, ho: {}, mok: {}", id, mst, jo, hang, ho, mok);
-        log.info("[searchLawContentDetailByDate] 요청 URL: {}", uri);
-
-        String response = restClient.get()
-                .uri(uri)
-                .retrieve()
-                .body(String.class);
-
-        log.info("[searchLawContentDetailByDate] 응답: {}", response);
-        return response;
+        return callApi("searchLawContentDetailByDate", uriBuilder.build().encode().toUri());
     }
 
     @Tool(description = "법령용어 목록을 조회합니다. 법령용어명으로 검색하여 용어 목록을 가져옵니다. " +
@@ -236,39 +179,15 @@ public class LawServiceTool {
                 .queryParam("target", "lstrm")
                 .queryParam("type", "JSON");
 
-        if (query != null && !query.isBlank()) {
-            uriBuilder.queryParam("query", query);
-        }
-        if (display != null && !display.isBlank()) {
-            uriBuilder.queryParam("display", display);
-        }
-        if (page != null && !page.isBlank()) {
-            uriBuilder.queryParam("page", page);
-        }
-        if (sort != null && !sort.isBlank()) {
-            uriBuilder.queryParam("sort", sort);
-        }
-        if (regDt != null && !regDt.isBlank()) {
-            uriBuilder.queryParam("regDt", regDt);
-        }
-        if (gana != null && !gana.isBlank()) {
-            uriBuilder.queryParam("gana", gana);
-        }
-        if (dicKndCd != null && !dicKndCd.isBlank()) {
-            uriBuilder.queryParam("dicKndCd", dicKndCd);
-        }
+        addParam(uriBuilder, "query", query);
+        addParam(uriBuilder, "display", display);
+        addParam(uriBuilder, "page", page);
+        addParam(uriBuilder, "sort", sort);
+        addParam(uriBuilder, "regDt", regDt);
+        addParam(uriBuilder, "gana", gana);
+        addParam(uriBuilder, "dicKndCd", dicKndCd);
 
-        URI uri = uriBuilder.build().encode().toUri();
-        log.debug("[searchLawTermList] 요청 파라미터 - query: {}, display: {}, page: {}, sort: {}, regDt: {}, gana: {}, dicKndCd: {}", query, display, page, sort, regDt, gana, dicKndCd);
-        log.debug("[searchLawTermList] 요청 URL: {}", uri);
-
-        String response = restClient.get()
-                .uri(uri)
-                .retrieve()
-                .body(String.class);
-
-        log.info("[searchLawTermList] 응답: {}", response);
-        return response;
+        return callApi("searchLawTermList", uriBuilder.build().encode().toUri());
     }
 
     @Tool(description = "법령용어의 상세 정의(본문)를 조회합니다. searchLawTermList 결과와 연관하여 사용합니다. " +
@@ -282,21 +201,9 @@ public class LawServiceTool {
                 .queryParam("target", "lstrm")
                 .queryParam("type", "JSON");
 
-        if (query != null && !query.isBlank()) {
-            uriBuilder.queryParam("query", query);
-        }
+        addParam(uriBuilder, "query", query);
 
-        URI uri = uriBuilder.build().encode().toUri();
-        log.info("[searchLawTermContent] 요청 파라미터 - query: {}", query);
-        log.info("[searchLawTermContent] 요청 URL: {}", uri);
-
-        String response = restClient.get()
-                .uri(uri)
-                .retrieve()
-                .body(String.class);
-
-        log.info("[searchLawTermContent] 응답: {}", response);
-        return response;
+        return callApi("searchLawTermContent", uriBuilder.build().encode().toUri());
     }
 
     @Tool(description = "국토교통부 법령해석 목록을 조회합니다. 부동산·건축·도로 등 국토교통부 소관 법령의 해석 사례를 검색합니다. " +
@@ -317,39 +224,15 @@ public class LawServiceTool {
                 .queryParam("target", "molitCgmExpc")
                 .queryParam("type", "JSON");
 
-        if (query != null && !query.isBlank()) {
-            uriBuilder.queryParam("query", query);
-        }
-        if (search != null && !search.isBlank()) {
-            uriBuilder.queryParam("search", search);
-        }
-        if (display != null && !display.isBlank()) {
-            uriBuilder.queryParam("display", display);
-        }
-        if (page != null && !page.isBlank()) {
-            uriBuilder.queryParam("page", page);
-        }
-        if (sort != null && !sort.isBlank()) {
-            uriBuilder.queryParam("sort", sort);
-        }
-        if (itmno != null && !itmno.isBlank()) {
-            uriBuilder.queryParam("itmno", itmno);
-        }
-        if (explYd != null && !explYd.isBlank()) {
-            uriBuilder.queryParam("explYd", explYd);
-        }
+        addParam(uriBuilder, "query", query);
+        addParam(uriBuilder, "search", search);
+        addParam(uriBuilder, "display", display);
+        addParam(uriBuilder, "page", page);
+        addParam(uriBuilder, "sort", sort);
+        addParam(uriBuilder, "itmno", itmno);
+        addParam(uriBuilder, "explYd", explYd);
 
-        URI uri = uriBuilder.build().encode().toUri();
-        log.debug("[searchMolitLawInterpretationList] 요청 파라미터 - query: {}, search: {}, display: {}, page: {}, sort: {}, itmno: {}, explYd: {}", query, search, display, page, sort, itmno, explYd);
-        log.debug("[searchMolitLawInterpretationList] 요청 URL: {}", uri);
-
-        String response = restClient.get()
-                .uri(uri)
-                .retrieve()
-                .body(String.class);
-
-        log.info("[searchMolitLawInterpretationList] 응답: {}", response);
-        return response;
+        return callApi("searchMolitLawInterpretationList", uriBuilder.build().encode().toUri());
     }
 
     @Tool(description = "국토교통부 법령해석 본문을 조회합니다. searchMolitLawInterpretationList 결과와 연관하여 사용합니다. " +
@@ -365,23 +248,275 @@ public class LawServiceTool {
                 .queryParam("target", "molitCgmExpc")
                 .queryParam("type", "JSON");
 
-        if (id != null && !id.isBlank()) {
-            uriBuilder.queryParam("ID", id);
-        }
-        if (lm != null && !lm.isBlank()) {
-            uriBuilder.queryParam("LM", lm);
-        }
+        addParam(uriBuilder, "ID", id);
+        addParam(uriBuilder, "LM", lm);
 
-        URI uri = uriBuilder.build().encode().toUri();
-        log.info("[searchMolitLawInterpretationContent] 요청 파라미터 - id: {}, lm: {}", id, lm);
-        log.info("[searchMolitLawInterpretationContent] 요청 URL: {}", uri);
+        return callApi("searchMolitLawInterpretationContent", uriBuilder.build().encode().toUri());
+    }
 
-        String response = restClient.get()
-                .uri(uri)
-                .retrieve()
-                .body(String.class);
+    // ===== 자치법규 =====
 
-        log.info("[searchMolitLawInterpretationContent] 응답: {}", response);
-        return response;
+    @Tool(description = "자치법규 목록을 조회합니다. 지방자치단체의 조례, 규칙 등을 검색합니다. " +
+            "응답의 각 항목에는 '자치법규일련번호', '자치법규ID', '자치법규명' 등이 포함됩니다. " +
+            "본문을 조회하려면 searchOrdinanceContent에 '자치법규ID'를 id로 또는 '자치법규일련번호'를 mst로 전달하세요.")
+    public String searchOrdinanceList(
+            @ToolParam(description = "자치법규명 검색 질의. 예: 주차장, 건축, 도시계획") String query,
+            @ToolParam(description = "검색범위. 1: 자치법규명(기본) / 2: 본문검색", required = false) String search,
+            @ToolParam(description = "검색된 결과 개수 (default=20, max=100)", required = false) String display,
+            @ToolParam(description = "검색 결과 페이지 (default=1)", required = false) String page,
+            @ToolParam(description = "정렬옵션. lasc: 자치법규오름차순(기본) / ldes: 자치법규내림차순 / dasc: 공포일자오름차순 / ddes: 공포일자내림차순 / efasc: 시행일자오름차순 / efdes: 시행일자내림차순", required = false) String sort,
+            @ToolParam(description = "1: 현행(기본), 2: 연혁", required = false) String nw,
+            @ToolParam(description = "지자체 도·특별시·광역시 코드. 예: 서울특별시=6110000", required = false) String org,
+            @ToolParam(description = "지자체 시·군·구 코드. org와 함께 사용. 예: 서울특별시 구로구 → org=6110000&sborg=3160000", required = false) String sborg,
+            @ToolParam(description = "법령종류. 30001: 조례 / 30002: 규칙 / 30003: 훈령 / 30004: 예규 / 30010: 고시 / 30011: 의회규칙", required = false) String knd
+    ) {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder
+                .fromHttpUrl(baseUrl + searchPath)
+                .queryParam("OC", oc)
+                .queryParam("target", "ordin")
+                .queryParam("type", "JSON");
+
+        addParam(uriBuilder, "query", query);
+        addParam(uriBuilder, "search", search);
+        addParam(uriBuilder, "display", display);
+        addParam(uriBuilder, "page", page);
+        addParam(uriBuilder, "sort", sort);
+        addParam(uriBuilder, "nw", nw);
+        addParam(uriBuilder, "org", org);
+        addParam(uriBuilder, "sborg", sborg);
+        addParam(uriBuilder, "knd", knd);
+
+        return callApi("searchOrdinanceList", uriBuilder.build().encode().toUri());
+    }
+
+    @Tool(description = "자치법규 본문을 조회합니다. searchOrdinanceList 결과와 연관하여 사용합니다. " +
+            "searchOrdinanceList 결과의 '자치법규ID'를 id에, 또는 '자치법규일련번호'를 mst에 전달하면 " +
+            "조문내용, 부칙, 별표 등 본문 상세 내용을 반환합니다.")
+    public String searchOrdinanceContent(
+            @ToolParam(description = "searchOrdinanceList 결과의 '자치법규ID' 값. id 또는 mst 중 하나 필수", required = false) String id,
+            @ToolParam(description = "searchOrdinanceList 결과의 '자치법규일련번호' 값. id 또는 mst 중 하나 필수", required = false) String mst
+    ) {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder
+                .fromHttpUrl(baseUrl + servicePath)
+                .queryParam("OC", oc)
+                .queryParam("target", "ordin")
+                .queryParam("type", "JSON");
+
+        addParam(uriBuilder, "ID", id);
+        addParam(uriBuilder, "MST", mst);
+
+        return callApi("searchOrdinanceContent", uriBuilder.build().encode().toUri());
+    }
+
+    // ===== 판례 =====
+
+    @Tool(description = "판례 목록을 조회합니다. 법원 판례를 사건명, 본문 등으로 검색합니다. " +
+            "응답의 각 항목에는 '판례일련번호', '사건명', '사건번호', '법원명' 등이 포함됩니다. " +
+            "판례 본문(판시사항, 판결요지, 판례내용)을 조회하려면 searchPrecedentContent에 '판례일련번호'를 id로 전달하세요.")
+    public String searchPrecedentList(
+            @ToolParam(description = "사건명 검색 질의. 예: 담보권, 임대차, 소유권") String query,
+            @ToolParam(description = "검색범위. 1: 판례명(기본) / 2: 본문검색", required = false) String search,
+            @ToolParam(description = "검색된 결과 개수 (default=20, max=100)", required = false) String display,
+            @ToolParam(description = "검색 결과 페이지 (default=1)", required = false) String page,
+            @ToolParam(description = "정렬옵션. lasc: 사건명오름차순 / ldes: 사건명내림차순 / dasc: 선고일자오름차순 / ddes: 선고일자내림차순(기본) / nasc: 법원명오름차순 / ndes: 법원명내림차순", required = false) String sort,
+            @ToolParam(description = "법원종류. 400201: 대법원 / 400202: 하위법원", required = false) String org,
+            @ToolParam(description = "법원명. 예: 대법원, 서울고등법원, 인천지방법원", required = false) String curt,
+            @ToolParam(description = "참조법령명. 예: 형법, 민법", required = false) String jo,
+            @ToolParam(description = "판례 사건번호", required = false) String nb,
+            @ToolParam(description = "선고일자 범위 검색. 예: 20090101~20090130", required = false) String prncYd
+    ) {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder
+                .fromHttpUrl(baseUrl + searchPath)
+                .queryParam("OC", oc)
+                .queryParam("target", "prec")
+                .queryParam("type", "JSON");
+
+        addParam(uriBuilder, "query", query);
+        addParam(uriBuilder, "search", search);
+        addParam(uriBuilder, "display", display);
+        addParam(uriBuilder, "page", page);
+        addParam(uriBuilder, "sort", sort);
+        addParam(uriBuilder, "org", org);
+        addParam(uriBuilder, "curt", curt);
+        addParam(uriBuilder, "JO", jo);
+        addParam(uriBuilder, "nb", nb);
+        addParam(uriBuilder, "prncYd", prncYd);
+
+        return callApi("searchPrecedentList", uriBuilder.build().encode().toUri());
+    }
+
+    @Tool(description = "판례 본문을 조회합니다. searchPrecedentList 결과와 연관하여 사용합니다. " +
+            "searchPrecedentList 결과의 '판례일련번호'를 id에 전달하면 " +
+            "판시사항, 판결요지, 참조조문, 참조판례, 판례내용 등 상세 정보를 반환합니다.")
+    public String searchPrecedentContent(
+            @ToolParam(description = "searchPrecedentList 결과의 '판례일련번호' 값 (필수)") String id,
+            @ToolParam(description = "판례명", required = false) String lm
+    ) {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder
+                .fromHttpUrl(baseUrl + servicePath)
+                .queryParam("OC", oc)
+                .queryParam("target", "prec")
+                .queryParam("type", "JSON");
+
+        addParam(uriBuilder, "ID", id);
+        addParam(uriBuilder, "LM", lm);
+
+        return callApi("searchPrecedentContent", uriBuilder.build().encode().toUri());
+    }
+
+    // ===== 중앙토지수용위원회 결정문 =====
+
+    @Tool(description = "중앙토지수용위원회 결정문 목록을 조회합니다. 토지수용 관련 결정문을 검색합니다. " +
+            "응답의 각 항목에는 '결정문일련번호', '제목' 등이 포함됩니다. " +
+            "결정문 본문(관련법리, 관련규정, 판단, 근거)을 조회하려면 searchOcltContent에 '결정문일련번호'를 id로 전달하세요.")
+    public String searchOcltList(
+            @ToolParam(description = "제목 검색 질의. 예: 토지, 수용, 보상") String query,
+            @ToolParam(description = "검색범위. 1: 제목(기본) / 2: 본문검색", required = false) String search,
+            @ToolParam(description = "검색된 결과 개수 (default=20, max=100)", required = false) String display,
+            @ToolParam(description = "검색 결과 페이지 (default=1)", required = false) String page,
+            @ToolParam(description = "정렬옵션. lasc: 제목오름차순(기본) / ldes: 제목내림차순", required = false) String sort
+    ) {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder
+                .fromHttpUrl(baseUrl + searchPath)
+                .queryParam("OC", oc)
+                .queryParam("target", "oclt")
+                .queryParam("type", "JSON");
+
+        addParam(uriBuilder, "query", query);
+        addParam(uriBuilder, "search", search);
+        addParam(uriBuilder, "display", display);
+        addParam(uriBuilder, "page", page);
+        addParam(uriBuilder, "sort", sort);
+
+        return callApi("searchOcltList", uriBuilder.build().encode().toUri());
+    }
+
+    @Tool(description = "중앙토지수용위원회 결정문 본문을 조회합니다. searchOcltList 결과와 연관하여 사용합니다. " +
+            "searchOcltList 결과의 '결정문일련번호'를 id에 전달하면 " +
+            "관련법리, 관련규정, 판단, 근거, 주해 등 상세 내용을 반환합니다.")
+    public String searchOcltContent(
+            @ToolParam(description = "searchOcltList 결과의 '결정문일련번호' 값 (필수)") String id
+    ) {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder
+                .fromHttpUrl(baseUrl + servicePath)
+                .queryParam("OC", oc)
+                .queryParam("target", "oclt")
+                .queryParam("type", "JSON");
+
+        addParam(uriBuilder, "ID", id);
+
+        return callApi("searchOcltContent", uriBuilder.build().encode().toUri());
+    }
+
+    // ===== 조세심판원 특별행정심판재결례 =====
+
+    @Tool(description = "조세심판원 특별행정심판재결례 목록을 조회합니다. 조세 관련 행정심판 재결례를 검색합니다. " +
+            "응답의 각 항목에는 '특별행정심판재결례일련번호', '사건명', '청구번호' 등이 포함됩니다. " +
+            "재결례 본문(재결요지, 주문, 이유)을 조회하려면 searchTtSpecialDeccContent에 '특별행정심판재결례일련번호'를 id로 전달하세요.")
+    public String searchTtSpecialDeccList(
+            @ToolParam(description = "재결례명 검색 질의. 예: 양도소득세, 취득세, 재산세") String query,
+            @ToolParam(description = "검색범위. 1: 특별행정심판재결례명(기본) / 2: 본문검색", required = false) String search,
+            @ToolParam(description = "검색된 결과 개수 (default=20, max=100)", required = false) String display,
+            @ToolParam(description = "검색 결과 페이지 (default=1)", required = false) String page,
+            @ToolParam(description = "정렬옵션. lasc: 재결례명오름차순(기본) / ldes: 재결례명내림차순 / dasc: 의결일자오름차순 / ddes: 의결일자내림차순 / nasc: 청구번호오름차순 / ndes: 청구번호내림차순", required = false) String sort,
+            @ToolParam(description = "재결례유형 (재결구분코드)", required = false) String cls,
+            @ToolParam(description = "처분일자 범위 검색. 예: 20090101~20090130", required = false) String dpaYd,
+            @ToolParam(description = "의결일자 범위 검색. 예: 20090101~20090130", required = false) String rslYd
+    ) {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder
+                .fromHttpUrl(baseUrl + searchPath)
+                .queryParam("OC", oc)
+                .queryParam("target", "ttSpecialDecc")
+                .queryParam("type", "JSON");
+
+        addParam(uriBuilder, "query", query);
+        addParam(uriBuilder, "search", search);
+        addParam(uriBuilder, "display", display);
+        addParam(uriBuilder, "page", page);
+        addParam(uriBuilder, "sort", sort);
+        addParam(uriBuilder, "cls", cls);
+        addParam(uriBuilder, "dpaYd", dpaYd);
+        addParam(uriBuilder, "rslYd", rslYd);
+
+        return callApi("searchTtSpecialDeccList", uriBuilder.build().encode().toUri());
+    }
+
+    @Tool(description = "조세심판원 특별행정심판재결례 본문을 조회합니다. searchTtSpecialDeccList 결과와 연관하여 사용합니다. " +
+            "searchTtSpecialDeccList 결과의 '특별행정심판재결례일련번호'를 id에 전달하면 " +
+            "재결요지, 주문, 청구취지, 이유, 관련법령 등 상세 내용을 반환합니다.")
+    public String searchTtSpecialDeccContent(
+            @ToolParam(description = "searchTtSpecialDeccList 결과의 '특별행정심판재결례일련번호' 값 (필수)") String id,
+            @ToolParam(description = "특별행정심판재결례명", required = false) String lm
+    ) {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder
+                .fromHttpUrl(baseUrl + servicePath)
+                .queryParam("OC", oc)
+                .queryParam("target", "ttSpecialDecc")
+                .queryParam("type", "JSON");
+
+        addParam(uriBuilder, "ID", id);
+        addParam(uriBuilder, "LM", lm);
+
+        return callApi("searchTtSpecialDeccContent", uriBuilder.build().encode().toUri());
+    }
+
+    // ===== 재정경제부 법령해석 =====
+
+    @Tool(description = "재정경제부 법령해석 목록을 조회합니다. 재정·경제 관련 법령의 해석 사례를 검색합니다. " +
+            "응답의 각 항목에는 '법령해석일련번호', '안건명', '안건번호' 등이 포함됩니다.")
+    public String searchMoefLawInterpretationList(
+            @ToolParam(description = "법령해석명 또는 본문 검색 질의. 예: 조합, 승계, 지분") String query,
+            @ToolParam(description = "검색범위. 1: 법령해석명(기본) / 2: 본문검색", required = false) String search,
+            @ToolParam(description = "검색된 결과 개수 (default=20, max=100)", required = false) String display,
+            @ToolParam(description = "검색 결과 페이지 (default=1)", required = false) String page,
+            @ToolParam(description = "정렬옵션. lasc: 법령해석명오름차순(기본) / ldes: 법령해석명내림차순 / dasc: 해석일자오름차순 / ddes: 해석일자내림차순 / nasc: 안건번호오름차순 / ndes: 안건번호내림차순", required = false) String sort,
+            @ToolParam(description = "안건번호. 안건번호로 검색 시 query는 무시됩니다.", required = false) String itmno,
+            @ToolParam(description = "해석일자 범위 검색. 예: 20090101~20090130", required = false) String explYd
+    ) {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder
+                .fromHttpUrl(baseUrl + searchPath)
+                .queryParam("OC", oc)
+                .queryParam("target", "moefCgmExpc")
+                .queryParam("type", "JSON");
+
+        addParam(uriBuilder, "query", query);
+        addParam(uriBuilder, "search", search);
+        addParam(uriBuilder, "display", display);
+        addParam(uriBuilder, "page", page);
+        addParam(uriBuilder, "sort", sort);
+        addParam(uriBuilder, "itmno", itmno);
+        addParam(uriBuilder, "explYd", explYd);
+
+        return callApi("searchMoefLawInterpretationList", uriBuilder.build().encode().toUri());
+    }
+
+    // ===== 국세청 법령해석 =====
+
+    @Tool(description = "국세청 법령해석 목록을 조회합니다. 세금·국세 관련 법령의 해석 사례를 검색합니다. " +
+            "응답의 각 항목에는 '법령해석일련번호', '안건명', '안건번호' 등이 포함됩니다.")
+    public String searchNtsLawInterpretationList(
+            @ToolParam(description = "법령해석명 또는 본문 검색 질의. 예: 세금, 증여, 재산") String query,
+            @ToolParam(description = "검색범위. 1: 법령해석명(기본) / 2: 본문검색", required = false) String search,
+            @ToolParam(description = "검색된 결과 개수 (default=20, max=100)", required = false) String display,
+            @ToolParam(description = "검색 결과 페이지 (default=1)", required = false) String page,
+            @ToolParam(description = "정렬옵션. lasc: 법령해석명오름차순(기본) / ldes: 법령해석명내림차순 / dasc: 해석일자오름차순 / ddes: 해석일자내림차순 / nasc: 안건번호오름차순 / ndes: 안건번호내림차순", required = false) String sort,
+            @ToolParam(description = "안건번호. 안건번호로 검색 시 query는 무시됩니다.", required = false) String itmno,
+            @ToolParam(description = "해석일자 범위 검색. 예: 20090101~20090130", required = false) String explYd
+    ) {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder
+                .fromHttpUrl(baseUrl + searchPath)
+                .queryParam("OC", oc)
+                .queryParam("target", "ntsCgmExpc")
+                .queryParam("type", "JSON");
+
+        addParam(uriBuilder, "query", query);
+        addParam(uriBuilder, "search", search);
+        addParam(uriBuilder, "display", display);
+        addParam(uriBuilder, "page", page);
+        addParam(uriBuilder, "sort", sort);
+        addParam(uriBuilder, "itmno", itmno);
+        addParam(uriBuilder, "explYd", explYd);
+
+        return callApi("searchNtsLawInterpretationList", uriBuilder.build().encode().toUri());
     }
 }
