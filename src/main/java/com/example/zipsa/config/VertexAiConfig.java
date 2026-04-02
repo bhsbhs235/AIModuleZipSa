@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.example.zipsa.tool.AptTradeTool;
 import com.example.zipsa.tool.LawServiceTool;
 import com.google.cloud.vertexai.VertexAI;
 
@@ -75,7 +76,7 @@ public class VertexAiConfig {
 
     @Bean
     @Qualifier("vertexAiChatClient")
-    public ChatClient vertexAiChatClient(VertexAiGeminiChatModel chatModel, LawServiceTool lawServiceTool) {
+    public ChatClient vertexAiChatClient(VertexAiGeminiChatModel chatModel, LawServiceTool lawServiceTool, AptTradeTool aptTradeTool) {
         String systemPrompt = """
                 당신은 '집사'라는 이름의 부동산 AI 에이전트입니다.
 
@@ -92,7 +93,7 @@ public class VertexAiConfig {
 
         return ChatClient.builder(chatModel)
                 .defaultSystem(systemPrompt)
-                .defaultTools(lawServiceTool)
+                .defaultTools(lawServiceTool, aptTradeTool)
                 .build();
     }
 }
